@@ -748,7 +748,7 @@ class TestClearTasks:
             end_date=DEFAULT_DATE + datetime.timedelta(days=10),
             catchup=True,
             bundle_version="v1",
-        ):
+        ) as dag:
             task0 = EmptyOperator(task_id="0")
             task1 = EmptyOperator(task_id="1")
         dr = dag_maker.create_dagrun(
@@ -758,11 +758,11 @@ class TestClearTasks:
 
         old_dag_version = DagVersion.get_latest_version(dr.dag_id)
         ti0, ti1 = sorted(dr.task_instances, key=lambda ti: ti.task_id)
-        ti0.refresh_from_task(task0)
-        ti1.refresh_from_task(task1)
+        ti0.refresh_from_task(dag.get_task("0"))
+        ti1.refresh_from_task(dag.get_task("1"))
 
-        ti0.run()
-        ti1.run()
+        run_task_instance(ti0, task0)
+        run_task_instance(ti1, task1)
         dr.state = DagRunState.SUCCESS
         session.merge(dr)
         session.flush()
@@ -774,10 +774,10 @@ class TestClearTasks:
             catchup=True,
             bundle_version="v2",
         ) as dag:
-            task0 = EmptyOperator(task_id="0")
-            task1 = EmptyOperator(task_id="1")
-            task1 = EmptyOperator(task_id="2")
-            task1 = EmptyOperator(task_id="3")
+            EmptyOperator(task_id="0")
+            EmptyOperator(task_id="1")
+            EmptyOperator(task_id="2")
+            EmptyOperator(task_id="3")
 
         new_dag_version = DagVersion.get_latest_version(dag.dag_id)
 
@@ -803,7 +803,7 @@ class TestClearTasks:
             end_date=DEFAULT_DATE + datetime.timedelta(days=10),
             catchup=True,
             bundle_version="v1",
-        ):
+        ) as dag:
             task0 = EmptyOperator(task_id="0")
             task1 = EmptyOperator(task_id="1")
         dr = dag_maker.create_dagrun(
@@ -813,11 +813,11 @@ class TestClearTasks:
 
         old_dag_version = DagVersion.get_latest_version(dr.dag_id)
         ti0, ti1 = sorted(dr.task_instances, key=lambda ti: ti.task_id)
-        ti0.refresh_from_task(task0)
-        ti1.refresh_from_task(task1)
+        ti0.refresh_from_task(dag.get_task("0"))
+        ti1.refresh_from_task(dag.get_task("1"))
 
-        ti0.run()
-        ti1.run()
+        run_task_instance(ti0, task0)
+        run_task_instance(ti1, task1)
         dr.state = DagRunState.SUCCESS
         session.merge(dr)
         session.flush()
@@ -829,10 +829,10 @@ class TestClearTasks:
             catchup=True,
             bundle_version="v2",
         ) as dag:
-            task0 = EmptyOperator(task_id="0")
-            task1 = EmptyOperator(task_id="1")
-            task1 = EmptyOperator(task_id="2")
-            task1 = EmptyOperator(task_id="3")
+            EmptyOperator(task_id="0")
+            EmptyOperator(task_id="1")
+            EmptyOperator(task_id="2")
+            EmptyOperator(task_id="3")
 
         new_dag_version = DagVersion.get_latest_version(dag.dag_id)
 
@@ -866,7 +866,7 @@ class TestClearTasks:
             end_date=DEFAULT_DATE + datetime.timedelta(days=10),
             catchup=True,
             bundle_version="v1",
-        ):
+        ) as dag:
             task0 = EmptyOperator(task_id="0")
             task1 = EmptyOperator(task_id="1")
         dr = dag_maker.create_dagrun(
@@ -876,11 +876,11 @@ class TestClearTasks:
 
         old_dag_version = DagVersion.get_latest_version(dr.dag_id)
         ti0, ti1 = sorted(dr.task_instances, key=lambda ti: ti.task_id)
-        ti0.refresh_from_task(task0)
-        ti1.refresh_from_task(task1)
+        ti0.refresh_from_task(dag.get_task("0"))
+        ti1.refresh_from_task(dag.get_task("1"))
 
-        ti0.run()
-        ti1.run()
+        run_task_instance(ti0, task0)
+        run_task_instance(ti1, task1)
         dr.state = DagRunState.SUCCESS
         session.merge(dr)
         session.flush()
@@ -892,8 +892,8 @@ class TestClearTasks:
             catchup=True,
             bundle_version="v2",
         ) as dag:
-            task0 = EmptyOperator(task_id="0")
-            task1 = EmptyOperator(task_id="1")
+            EmptyOperator(task_id="0")
+            EmptyOperator(task_id="1")
 
         new_dag_version = DagVersion.get_latest_version(dag.dag_id)
 
