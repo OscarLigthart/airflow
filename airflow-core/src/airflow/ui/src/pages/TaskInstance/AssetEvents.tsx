@@ -34,7 +34,7 @@ export const AssetEvents = () => {
   const { NAME_PATTERN, OFFSET }: SearchParamsKeysType = SearchParamsKeys;
   const { t: translate } = useTranslation(["assets"]);
   const [assetNameSearch, setAssetNameSearch] = useState(
-    searchParams.get(SearchParamsKeys.NAME_PATTERN) ?? "",
+    searchParams.get(NAME_PATTERN) ?? "",
   );
 
   const parsedMapIndex = parseInt(mapIndex, 10);
