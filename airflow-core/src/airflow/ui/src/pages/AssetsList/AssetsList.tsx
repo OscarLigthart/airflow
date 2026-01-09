@@ -112,13 +112,13 @@ const createColumns = (
   },
 ];
 
-const NAME_PATTERN_PARAM = SearchParamsKeys.NAME_PATTERN;
+const { NAME_PATTERN, OFFSET } = SearchParamsKeys;
 
 export const AssetsList = () => {
   const { t: translate } = useTranslation(["assets", "common"]);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const namePattern = searchParams.get(NAME_PATTERN_PARAM) ?? "";
+  const namePattern = searchParams.get(NAME_PATTERN) ?? "";
 
   const { setTableURLState, tableURLState } = useTableURLState();
   const { pagination, sorting } = tableURLState;
@@ -142,10 +142,11 @@ export const AssetsList = () => {
       sorting,
     });
     if (value) {
-      searchParams.set(NAME_PATTERN_PARAM, value);
+      searchParams.set(NAME_PATTERN, value);
     } else {
-      searchParams.delete(NAME_PATTERN_PARAM);
+      searchParams.delete(NAME_PATTERN);
     }
+    searchParams.delete(OFFSET);
     setSearchParams(searchParams);
   };
 

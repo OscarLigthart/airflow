@@ -182,8 +182,17 @@ const createColumns = (
   },
 ];
 
-const { FAVORITE, LAST_DAG_RUN_STATE, NAME_PATTERN, NEEDS_REVIEW, OWNERS, PAUSED, TAGS, TAGS_MATCH_MODE } =
-  SearchParamsKeys;
+const {
+  FAVORITE,
+  LAST_DAG_RUN_STATE,
+  NAME_PATTERN,
+  NEEDS_REVIEW,
+  OFFSET,
+  OWNERS,
+  PAUSED,
+  TAGS,
+  TAGS_MATCH_MODE,
+} = SearchParamsKeys;
 
 const cardDef: CardDef<DAGWithLatestDagRunsResponse> = {
   card: ({ row }) => <DagCard dag={row} />,
@@ -232,7 +241,7 @@ export const DagsList = () => {
     } else {
       searchParams.delete(NAME_PATTERN);
     }
-    searchParams.delete("offset");
+    searchParams.delete(OFFSET);
     setSearchParams(searchParams);
   };
 

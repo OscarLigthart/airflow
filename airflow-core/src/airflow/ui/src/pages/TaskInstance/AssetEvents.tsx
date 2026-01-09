@@ -32,7 +32,6 @@ export const AssetEvents = () => {
   const { dagId = "", mapIndex = "-1", runId = "", taskId = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t: translate } = useTranslation(["assets"]);
-
   const [assetNameSearch, setAssetNameSearch] = useState(
     searchParams.get(SearchParamsKeys.NAME_PATTERN) ?? "",
   );
@@ -70,6 +69,7 @@ export const AssetEvents = () => {
       } else {
         searchParams.delete(SearchParamsKeys.NAME_PATTERN);
       }
+      searchParams.delete(SearchParamsKeys.OFFSET);
       setSearchParams(searchParams);
     },
     [pagination, searchParams, setSearchParams, setTableURLState, tableURLState],
