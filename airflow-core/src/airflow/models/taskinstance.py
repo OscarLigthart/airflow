@@ -231,7 +231,7 @@ def get_new_tasks(
     dag_id: str,
     run_id: str,
     session: Session,
-) -> list[TaskInstance]:
+) -> Collection[str | tuple[str, int]]:
     """
     Get task instances for newly added tasks in the latest DAG version.
 
@@ -267,17 +267,7 @@ def get_new_tasks(
             dag_run.verify_integrity(session=session, dag_version_id=dag_version.id)
             session.flush()
 
-        from airflow.models.taskinstance import TaskInstance
-
-        new_tis = session.scalars(
-            select(TaskInstance).where(
-                TaskInstance.dag_id == dag_id,
-                TaskInstance.run_id == run_id,
-                TaskInstance.task_id.in_(new_task_ids),
-            )
-        ).all()
-        return list(new_tis)
-    return []
+    return list(new_task_ids)
 
 
 def clear_task_instances(
