@@ -1022,27 +1022,27 @@ class SerializedDAG:
         if only_new:
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
-            tis = get_new_tasks(self.dag_id, run_id, session)
-        else:
-            state: list[TaskInstanceState] = []
+            task_ids = get_new_tasks(self.dag_id, run_id, session)
 
-            if only_failed:
-                state += [TaskInstanceState.FAILED, TaskInstanceState.UPSTREAM_FAILED]
-            if only_running:
-                # Yes, having `+=` doesn't make sense, but this was the existing behaviour
-                state += [TaskInstanceState.RUNNING]
+        state: list[TaskInstanceState] = []
 
-            tis_result = self._get_task_instances(
-                task_ids=task_ids,
-                start_date=start_date,
-                end_date=end_date,
-                run_id=run_id,
-                state=state,
-                session=session,
-                exclude_task_ids=exclude_task_ids,
-                exclude_run_ids=exclude_run_ids,
-            )
-            tis = list(tis_result)
+        if only_failed:
+            state += [TaskInstanceState.FAILED, TaskInstanceState.UPSTREAM_FAILED]
+        if only_running:
+            # Yes, having `+=` doesn't make sense, but this was the existing behaviour
+            state += [TaskInstanceState.RUNNING]
+
+        tis_result = self._get_task_instances(
+            task_ids=task_ids,
+            start_date=start_date,
+            end_date=end_date,
+            run_id=run_id,
+            state=state,
+            session=session,
+            exclude_task_ids=exclude_task_ids,
+            exclude_run_ids=exclude_run_ids,
+        )
+        tis = list(tis_result)
 
         if dry_run:
             return list(tis)
