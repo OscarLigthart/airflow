@@ -1017,62 +1017,35 @@ class SerializedDAG:
             tuples that should not be cleared
         :param exclude_run_ids: A set of ``run_id`` or (``run_id``)
         """
-        from airflow.models.taskinstance import clear_task_instances
-
-        state: list[TaskInstanceState] = []
+        from airflow.models.taskinstance import clear_task_instances, get_new_tasks
 
         if only_new:
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
+            tis = get_new_tasks(self.dag_id, run_id, session)
+        else:
+            state: list[TaskInstanceState] = []
 
-            from airflow.models.dagbag import DBDagBag
+            if only_failed:
+                state += [TaskInstanceState.FAILED, TaskInstanceState.UPSTREAM_FAILED]
+            if only_running:
+                # Yes, having `+=` doesn't make sense, but this was the existing behaviour
+                state += [TaskInstanceState.RUNNING]
 
-            dag_run = session.scalar(select(DagRun).filter_by(dag_id=self.dag_id, run_id=run_id))
-            if not dag_run:
-                raise ValueError(f"DagRun with run_id '{run_id}' not found")
-
-            dagbag = DBDagBag(load_op_links=False)
-            latest_dag = dagbag.get_latest_version_of_dag(self.dag_id, session=session)
-
-            if not latest_dag:
-                raise ValueError(f"Latest DAG version for '{self.dag_id}' not found")
-
-            current_dag = dagbag.get_dag_for_run(dag_run=dag_run, session=session)
-            new_task_ids = set(latest_dag.task_ids) - set(current_dag.task_ids) if current_dag else set()
-
-            # Update dag run to latest version
-            if new_task_ids:
-                dag_version = DagVersion.get_latest_version(self.dag_id, session=session)
-                if dag_version:
-                    dag_run.created_dag_version_id = dag_version.id
-                    dag_run.dag = latest_dag
-                    dag_run.verify_integrity(session=session, dag_version_id=dag_version.id)
-                    session.flush()
-
-                task_ids = list(new_task_ids)
-            else:
-                task_ids = []
-        if only_failed:
-            state += [TaskInstanceState.FAILED, TaskInstanceState.UPSTREAM_FAILED]
-        if only_running:
-            # Yes, having `+=` doesn't make sense, but this was the existing behaviour
-            state += [TaskInstanceState.RUNNING]
-
-        tis_result = self._get_task_instances(
-            task_ids=task_ids,
-            start_date=start_date,
-            end_date=end_date,
-            run_id=run_id,
-            state=state,
-            session=session,
-            exclude_task_ids=exclude_task_ids,
-            exclude_run_ids=exclude_run_ids,
-        )
+            tis_result = self._get_task_instances(
+                task_ids=task_ids,
+                start_date=start_date,
+                end_date=end_date,
+                run_id=run_id,
+                state=state,
+                session=session,
+                exclude_task_ids=exclude_task_ids,
+                exclude_run_ids=exclude_run_ids,
+            )
+            tis = list(tis_result)
 
         if dry_run:
-            return list(tis_result)
-
-        tis = list(tis_result)
+            return list(tis)
 
         count = len(tis)
         if count == 0:
