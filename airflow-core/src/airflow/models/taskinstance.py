@@ -227,6 +227,59 @@ def _recalculate_dagrun_queued_at_deadlines(
     # These changes are committed by the calling function.
 
 
+def get_new_tasks(
+    dag_id: str,
+    run_id: str,
+    session: Session,
+) -> list[TaskInstance]:
+    """
+    Get task instances for newly added tasks in the latest DAG version.
+
+    Updates the DAG run to the latest version if new tasks are found and
+    creates task instances for them via verify_integrity.
+
+    :param run_id: The run_id for the DAG run
+    :param dag_id: The dag_id for the DAG
+    :param session: SQLAlchemy session
+    :return: List of task instances for newly added tasks
+    """
+    from airflow.models.dagbag import DBDagBag
+    from airflow.models.dagrun import DagRun
+
+    dag_run = session.scalar(select(DagRun).filter_by(dag_id=dag_id, run_id=run_id))
+    if not dag_run:
+        raise ValueError(f"DagRun with run_id '{run_id}' not found")
+
+    scheduler_dagbag = DBDagBag(load_op_links=False)
+    latest_dag = scheduler_dagbag.get_latest_version_of_dag(dag_id, session=session)
+
+    if not latest_dag:
+        raise ValueError(f"Latest DAG version for '{dag_id}' not found")
+
+    current_dag = scheduler_dagbag.get_dag_for_run(dag_run=dag_run, session=session)
+    new_task_ids = set(latest_dag.task_ids) - set(current_dag.task_ids) if current_dag else set()
+
+    if new_task_ids:
+        dag_version = DagVersion.get_latest_version(dag_id, session=session)
+        if dag_version:
+            dag_run.created_dag_version_id = dag_version.id
+            dag_run.dag = latest_dag
+            dag_run.verify_integrity(session=session, dag_version_id=dag_version.id)
+            session.flush()
+
+        from airflow.models.taskinstance import TaskInstance
+
+        new_tis = session.scalars(
+            select(TaskInstance).where(
+                TaskInstance.dag_id == dag_id,
+                TaskInstance.run_id == run_id,
+                TaskInstance.task_id.in_(new_task_ids),
+            )
+        ).all()
+        return list(new_tis)
+    return []
+
+
 def clear_task_instances(
     tis: list[TaskInstance],
     session: Session,
