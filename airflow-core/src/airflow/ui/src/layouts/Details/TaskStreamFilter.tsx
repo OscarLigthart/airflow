@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,13 +18,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Button, ButtonGroup, IconButton, Input, Portal, Separator, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, ButtonGroup, HStack, IconButton, Input, Portal, Separator, Text, VStack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FiFilter } from "react-icons/fi";
+import { FiFilter, FiInfo } from "react-icons/fi";
 import { useParams, useSearchParams } from "react-router-dom";
 
 import { Menu } from "src/components/ui/Menu";
+import { Tooltip } from "src/components/ui";
 
 export const TaskStreamFilter = () => {
   const { t: translate } = useTranslation(["common", "components", "dag"]);
@@ -217,9 +220,24 @@ export const TaskStreamFilter = () => {
 
             {/* Mode Section */}
             <VStack align="stretch" gap={2} width="100%">
-              <Text fontSize="xs" fontWeight="semibold">
-                {translate("dag:panel.taskStreamFilter.mode")}
-              </Text>
+              <HStack gap={1}>
+                <Text fontSize="xs" fontWeight="semibold">
+                  {translate("dag:panel.taskStreamFilter.mode")}
+                </Text>
+                <Tooltip
+                  closeDelay={200}
+                  content={
+                    <Text fontSize="xs">
+                      {translate("dag:panel.taskStreamFilter.modeTooltip")}
+                    </Text>
+                  }
+                  openDelay={0}
+                >
+                  <Box as="span" color="fg.muted" cursor="help" display="inline-flex">
+                    <FiInfo size={12} />
+                  </Box>
+                </Tooltip>
+              </HStack>
               <ButtonGroup attached colorPalette="brand" size="sm" variant="outline" width="100%">
                 <Button
                   disabled={!hasActiveFilter}
