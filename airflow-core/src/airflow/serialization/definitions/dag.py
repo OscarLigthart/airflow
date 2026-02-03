@@ -1025,7 +1025,6 @@ class SerializedDAG:
             task_ids = get_new_tasks(self.dag_id, run_id, session)
 
         state: list[TaskInstanceState] = []
-
         if only_failed:
             state += [TaskInstanceState.FAILED, TaskInstanceState.UPSTREAM_FAILED]
         if only_running:
