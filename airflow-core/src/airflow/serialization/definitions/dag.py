@@ -1042,10 +1042,11 @@ class SerializedDAG:
             exclude_task_ids=exclude_task_ids,
             exclude_run_ids=exclude_run_ids,
         )
-        tis = list(tis_result)
 
         if dry_run:
-            return list(tis)
+            return list(tis_result)
+
+        tis = list(tis_result)
 
         count = len(tis)
         if count == 0:
