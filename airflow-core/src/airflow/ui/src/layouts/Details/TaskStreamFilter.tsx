@@ -18,14 +18,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Box, Button, ButtonGroup, HStack, IconButton, Input, Portal, Separator, Text, VStack } from "@chakra-ui/react";
+import {
+  Button,
+  ButtonGroup,
+  HStack,
+  IconButton,
+  Input,
+  Portal,
+  Separator,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FiFilter, FiInfo } from "react-icons/fi";
 import { useParams, useSearchParams } from "react-router-dom";
 
-import { Menu } from "src/components/ui/Menu";
 import { Tooltip } from "src/components/ui";
+import { Menu } from "src/components/ui/Menu";
 
 export const TaskStreamFilter = () => {
   const { t: translate } = useTranslation(["common", "components", "dag"]);
@@ -226,16 +236,10 @@ export const TaskStreamFilter = () => {
                 </Text>
                 <Tooltip
                   closeDelay={200}
-                  content={
-                    <Text fontSize="xs">
-                      {translate("dag:panel.taskStreamFilter.modeTooltip")}
-                    </Text>
-                  }
+                  content={translate("dag:panel.taskStreamFilter.modeTooltip")}
                   openDelay={0}
                 >
-                  <Box as="span" color="fg.muted" cursor="help" display="inline-flex">
-                    <FiInfo size={12} />
-                  </Box>
+                  <FiInfo size={12} />
                 </Tooltip>
               </HStack>
               <ButtonGroup attached colorPalette="brand" size="sm" variant="outline" width="100%">
