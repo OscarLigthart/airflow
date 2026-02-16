@@ -1017,12 +1017,12 @@ class SerializedDAG:
             tuples that should not be cleared
         :param exclude_run_ids: A set of ``run_id`` or (``run_id``)
         """
-        from airflow.models.taskinstance import clear_task_instances, get_new_tasks
+        from airflow.models.taskinstance import _get_new_tasks, clear_task_instances
 
         if only_new:
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
-            task_ids = get_new_tasks(self.dag_id, run_id, session)
+            task_ids = _get_new_tasks(self.dag_id, run_id, session)
 
         state: list[TaskInstanceState] = []
         if only_failed:
