@@ -227,7 +227,7 @@ def _recalculate_dagrun_queued_at_deadlines(
     # These changes are committed by the calling function.
 
 
-def get_new_tasks(
+def _get_new_tasks(
     dag_id: str,
     run_id: str,
     session: Session,
