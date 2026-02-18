@@ -785,12 +785,15 @@ class TestClearTasks:
         assert count == 2
 
         session.flush()
-        dr.refresh_from_db(session)
 
-        assert dr.created_dag_version_id == new_dag_version.id
-        assert dr.bundle_version == new_dag_version.bundle_version
+        updated_dr = session.scalar(
+            select(DagRun).where(DagRun.dag_id == dr.dag_id, DagRun.run_id == dr.run_id)
+        )
 
-        all_tis = sorted(dr.task_instances, key=lambda ti: ti.task_id)
+        assert updated_dr.created_dag_version_id == new_dag_version.id
+        assert updated_dr.bundle_version == new_dag_version.bundle_version
+
+        all_tis = sorted(updated_dr.task_instances, key=lambda ti: ti.task_id)
         assert len(all_tis) == 4
         assert [ti.task_id for ti in all_tis] == ["0", "1", "2", "3"]
 

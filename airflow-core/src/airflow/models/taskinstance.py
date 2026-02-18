@@ -298,7 +298,11 @@ def _update_dagrun_to_latest_version(
     dag_run.bundle_version = dag_version.bundle_version
     dag_run.dag = latest_dag
 
+    for ti in dag_run.get_task_instances(session=session):
+        ti.dag_version_id = dag_version.id
+
     dag_run.verify_integrity(session=session, dag_version_id=dag_version.id)
+
     session.flush()
 
 
