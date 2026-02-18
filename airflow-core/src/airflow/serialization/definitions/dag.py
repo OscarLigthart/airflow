@@ -1035,6 +1035,11 @@ class SerializedDAG:
 
                 scheduler_dagbag = DBDagBag(load_op_links=False)
                 latest_dag = scheduler_dagbag.get_latest_version_of_dag(self.dag_id, session=session)
+                if not latest_dag:
+                    raise AirflowException(
+                        f"Cannot clear new tasks for DAG {self.dag_id} because the latest version "
+                        "could not be loaded"
+                    )
                 dag_version = DagVersion.get_latest_version(self.dag_id, session=session)
 
                 tis = []
