@@ -1022,6 +1022,8 @@ class SerializedDAG:
         )
 
         if only_new:
+            if task_ids is not None:
+                raise ValueError("only_new and task_ids are mutually exclusive")
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
             task_ids = _get_new_task_ids(self.dag_id, run_id, session)
