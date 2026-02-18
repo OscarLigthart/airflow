@@ -995,7 +995,7 @@ class SerializedDAG:
         exclude_task_ids: frozenset[str] | frozenset[tuple[str, int]] | None = frozenset(),
         exclude_run_ids: frozenset[str] | None = frozenset(),
         run_on_latest_version: bool = False,
-    ) -> int | Iterable[TaskInstance]:
+    ) -> int | Iterable[TaskInstance] | set[str]:
         """
         Clear a set of task instances associated with the current dag for a specified date range.
 
@@ -1027,33 +1027,7 @@ class SerializedDAG:
             task_ids = _get_new_task_ids(self.dag_id, run_id, session)
 
             if dry_run:
-                # For dry run, create temporary TaskInstance objects without database changes
-                # The dag_run is not affected in dry run mode
-                from airflow.models.dag_version import DagVersion
-                from airflow.models.dagbag import DBDagBag
-                from airflow.models.taskinstance import TaskInstance
-
-                scheduler_dagbag = DBDagBag(load_op_links=False)
-                latest_dag = scheduler_dagbag.get_latest_version_of_dag(self.dag_id, session=session)
-                if not latest_dag:
-                    raise AirflowException(
-                        f"Cannot clear new tasks for DAG {self.dag_id} because the latest version "
-                        "could not be loaded"
-                    )
-                dag_version = DagVersion.get_latest_version(self.dag_id, session=session)
-
-                tis = []
-                for task_id in sorted(task_ids):
-                    task = latest_dag.get_task(task_id)
-                    ti = TaskInstance(
-                        task=task,
-                        run_id=run_id,
-                        dag_version_id=dag_version.id if dag_version else None,
-                    )
-                    tis.append(ti)
-                return tis
-            # For non-dry run, update the dag_run to use the latest dag version
-            # This creates task instances for newly added tasks via verify_integrity
+                return set(task_ids)
             if task_ids:
                 _update_dagrun_to_latest_version(self.dag_id, run_id, session)
 
