@@ -808,9 +808,6 @@ class TestClearTasks:
         """Test that only_new with dry_run returns new tasks and changes can be rolled back."""
         with dag_maker(
             "test_clear_new_task_instances_dry_run",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v1",
         ) as dag:
             task0 = EmptyOperator(task_id="0")
@@ -833,9 +830,6 @@ class TestClearTasks:
 
         with dag_maker(
             "test_clear_new_task_instances_dry_run",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v2",
         ) as dag:
             EmptyOperator(task_id="0")
@@ -868,9 +862,6 @@ class TestClearTasks:
         """Test that only_new returns 0 when no new tasks are added."""
         with dag_maker(
             "test_clear_no_new_task_instances",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v1",
         ) as dag:
             task0 = EmptyOperator(task_id="0")
@@ -893,9 +884,6 @@ class TestClearTasks:
 
         with dag_maker(
             "test_clear_no_new_task_instances",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v2",
         ) as dag:
             EmptyOperator(task_id="0")
