@@ -744,9 +744,6 @@ class TestClearTasks:
 
         with dag_maker(
             "test_clear_new_task_instances",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v1",
         ) as dag:
             task0 = EmptyOperator(task_id="0")
@@ -769,9 +766,6 @@ class TestClearTasks:
 
         with dag_maker(
             "test_clear_new_task_instances",
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE + datetime.timedelta(days=10),
-            catchup=True,
             bundle_version="v2",
         ) as dag:
             EmptyOperator(task_id="0")
@@ -788,15 +782,30 @@ class TestClearTasks:
             only_new=True,
             session=session,
         )
+        assert count == 2
 
         session.flush()
         dr.refresh_from_db(session)
 
-        # Should return 2 new tasks
-        assert count == 2
+        assert dr.created_dag_version_id == new_dag_version.id
+        assert dr.bundle_version == new_dag_version.bundle_version
+
+        all_tis = sorted(dr.task_instances, key=lambda ti: ti.task_id)
+        assert len(all_tis) == 4
+        assert [ti.task_id for ti in all_tis] == ["0", "1", "2", "3"]
+
+        ti0_after, ti1_after, ti2, ti3 = all_tis
+        assert ti0_after.state == TaskInstanceState.SUCCESS
+        assert ti1_after.state == TaskInstanceState.SUCCESS
+
+        assert ti2.state is None
+        assert ti3.state is None
+
+        for ti in all_tis:
+            assert ti.dag_version_id == new_dag_version.id
 
     def test_clear_only_new_tasks_dry_run(self, dag_maker, session):
-        """Test that only_new with dry_run returns new tasks without making changes."""
+        """Test that only_new with dry_run returns new tasks and changes can be rolled back."""
         with dag_maker(
             "test_clear_new_task_instances_dry_run",
             start_date=DEFAULT_DATE,
@@ -838,7 +847,6 @@ class TestClearTasks:
 
         assert old_dag_version.id != new_dag_version.id
 
-        # Dry run - should return list of new tasks without making changes
         new_tis = dag.clear(
             run_id=dr.run_id,
             only_new=True,
@@ -846,15 +854,13 @@ class TestClearTasks:
             session=session,
         )
 
-        session.flush()
-        dr.refresh_from_db(session)
-
-        # Check if correct tasks are returned
         assert len(new_tis) == 2
         assert [new_tis[0].task_id, new_tis[1].task_id] == ["2", "3"]
         assert [new_tis[0].state, new_tis[1].state] == [None, None]
 
-        # Verify no changes were made to the database
+        session.rollback()
+        dr.refresh_from_db(session)
+
         assert dr.created_dag_version_id == old_dag_version.id
         assert len(dr.task_instances) == 2  # should be only the 2 earlier tasks
 
@@ -899,7 +905,6 @@ class TestClearTasks:
 
         assert old_dag_version.id != new_dag_version.id
 
-        # Clear with only_new should return 0
         count = dag.clear(
             run_id=dr.run_id,
             only_new=True,

@@ -954,7 +954,6 @@ class SerializedDAG:
         end_date: datetime.datetime | None = None,
         only_failed: bool = False,
         only_running: bool = False,
-        only_new: bool = False,
         dag_run_state: DagRunState = DagRunState.QUEUED,
         session: Session = NEW_SESSION,
         exclude_task_ids: frozenset[str] | frozenset[tuple[str, int]] | None = frozenset(),
@@ -971,7 +970,6 @@ class SerializedDAG:
         end_date: datetime.datetime | None = None,
         only_failed: bool = False,
         only_running: bool = False,
-        only_new: bool = False,
         dag_run_state: DagRunState = DagRunState.QUEUED,
         dry_run: Literal[False] = False,
         session: Session = NEW_SESSION,
@@ -1017,12 +1015,42 @@ class SerializedDAG:
             tuples that should not be cleared
         :param exclude_run_ids: A set of ``run_id`` or (``run_id``)
         """
-        from airflow.models.taskinstance import _get_new_tasks, clear_task_instances
+        from airflow.models.taskinstance import (
+            _get_new_task_ids,
+            _update_dagrun_to_latest_version,
+            clear_task_instances,
+        )
 
         if only_new:
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
-            task_ids = _get_new_tasks(self.dag_id, run_id, session)
+            task_ids = _get_new_task_ids(self.dag_id, run_id, session)
+
+            if dry_run:
+                # For dry run, create temporary TaskInstance objects without database changes
+                # The dag_run is not affected in dry run mode
+                from airflow.models.dag_version import DagVersion
+                from airflow.models.dagbag import DBDagBag
+                from airflow.models.taskinstance import TaskInstance
+
+                scheduler_dagbag = DBDagBag(load_op_links=False)
+                latest_dag = scheduler_dagbag.get_latest_version_of_dag(self.dag_id, session=session)
+                dag_version = DagVersion.get_latest_version(self.dag_id, session=session)
+
+                tis = []
+                for task_id in sorted(task_ids):
+                    task = latest_dag.get_task(task_id)
+                    ti = TaskInstance(
+                        task=task,
+                        run_id=run_id,
+                        dag_version_id=dag_version.id if dag_version else None,
+                    )
+                    tis.append(ti)
+                return tis
+            # For non-dry run, update the dag_run to use the latest dag version
+            # This creates task instances for newly added tasks via verify_integrity
+            if task_ids:
+                _update_dagrun_to_latest_version(self.dag_id, run_id, session)
 
         state: list[TaskInstanceState] = []
         if only_failed:
