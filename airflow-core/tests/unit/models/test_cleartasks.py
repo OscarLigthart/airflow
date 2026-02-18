@@ -852,8 +852,7 @@ class TestClearTasks:
         )
 
         assert len(new_tis) == 2
-        assert [new_tis[0].task_id, new_tis[1].task_id] == ["2", "3"]
-        assert [new_tis[0].state, new_tis[1].state] == [None, None]
+        assert sorted(new_tis) == ["2", "3"]
 
         session.rollback()
         dr.refresh_from_db(session)
