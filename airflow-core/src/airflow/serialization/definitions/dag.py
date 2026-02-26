@@ -919,6 +919,23 @@ class SerializedDAG:
         run_id: str,
         only_failed: bool = False,
         only_running: bool = False,
+        only_new: Literal[True],
+        dag_run_state: DagRunState = DagRunState.QUEUED,
+        session: Session = NEW_SESSION,
+        exclude_task_ids: frozenset[str] | frozenset[tuple[str, int]] | None = frozenset(),
+        exclude_run_ids: frozenset[str] | None = frozenset(),
+        run_on_latest_version: bool = False,
+    ) -> set[str]: ...  # pragma: no cover
+
+    @overload
+    def clear(
+        self,
+        *,
+        dry_run: Literal[True],
+        task_ids: Collection[str | tuple[str, int]] | None = None,
+        run_id: str,
+        only_failed: bool = False,
+        only_running: bool = False,
         only_new: bool = False,
         dag_run_state: DagRunState = DagRunState.QUEUED,
         session: Session = NEW_SESSION,
@@ -1024,6 +1041,10 @@ class SerializedDAG:
         if only_new:
             if task_ids is not None:
                 raise ValueError("only_new and task_ids are mutually exclusive")
+            if only_failed:
+                raise ValueError("only_new and only_failed are mutually exclusive")
+            if only_running:
+                raise ValueError("only_new and only_running are mutually exclusive")
             if not run_id:
                 raise ValueError("only_new requires run_id to be specified")
             task_ids = _get_new_task_ids(self.dag_id, run_id, session)
