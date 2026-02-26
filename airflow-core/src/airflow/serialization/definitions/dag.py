@@ -936,7 +936,7 @@ class SerializedDAG:
         run_id: str,
         only_failed: bool = False,
         only_running: bool = False,
-        only_new: bool = False,
+        only_new: Literal[False] = False,
         dag_run_state: DagRunState = DagRunState.QUEUED,
         session: Session = NEW_SESSION,
         exclude_task_ids: frozenset[str] | frozenset[tuple[str, int]] | None = frozenset(),
